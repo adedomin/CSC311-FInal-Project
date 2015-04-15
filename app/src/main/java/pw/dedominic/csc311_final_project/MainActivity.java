@@ -17,14 +17,14 @@
 
 package pw.dedominic.csc311_final_project;
 
+import android.app.FragmentManager;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -36,16 +36,21 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Vector;
 
 
-public class MainActivity extends ActionBarActivity implements AdapterView.OnItemClickListener
+public class MainActivity extends FragmentActivity implements AdapterView.OnItemClickListener
 {
+	// activity has multiple views
+	FragmentManager mFragmentManager;
 
+	// list of players in a list view
 	private ArrayAdapter<String> PLAYER_LIST;
 	private ListView mListView;
+
+	// map view of nearby points
+	private MapView mMapView;
 
 	private HttpHandler mHttpHandler = new HttpHandler();
 	private HttpGetHandler mHttpGetHandler = new HttpGetHandler();
@@ -72,7 +77,6 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
 		mListView.setAdapter(PLAYER_LIST);
 		mListView.setOnItemClickListener(this);
-		mHttpGetHandler.sleep(1);
 		mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 		mLocationListener = new LocationListener()
 		{
@@ -103,6 +107,11 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		};
 		mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
 		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+
+		mMapView = (MapView) findViewById(R.id.mapView);
+		mMapView.update_map();
+
+		mHttpGetHandler.handleMessage(Message.obtain());
 	}
 
 	public void onItemClick(AdapterView<?> adapterView, View view, int arg2, long arg3)
@@ -140,8 +149,10 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 	 */
 	private void processCSV(String raw_data)
 	{
-		Log.e("string", raw_data);
+		// split by line
 		String[] CSV = raw_data.split("\n");
+
+		// resizeable array, sortable
 		Vector<CSVData> Strings = new Vector<>();
 
 		for (String string : CSV)
@@ -149,9 +160,11 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 			CSVData entry = new CSVData();
 			String[] split_string = string.split(",");
 			entry.username = split_string[0];
+			entry.latitude = Double.parseDouble(split_string[1]);
+			entry.longitude = Double.parseDouble(split_string[2]);
 			entry.distance = getDistance(
-					Double.parseDouble(split_string[1]), PLAYER_LATITUDE,
-					Double.parseDouble(split_string[2]), PLAYER_LONGITUDE);
+					entry.latitude, PLAYER_LATITUDE,
+					entry.longitude, PLAYER_LONGITUDE);
 			entry.MAC_ADDR = split_string[3];
 
 			Strings.add(entry);
@@ -160,12 +173,16 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		// sorts by distance
 		Collections.sort(Strings);
 
-		PLAYER_LIST.clear();
+		PLAYER_LIST.clear(); // remove the old
+		mMapView.clear_map();
+		mMapView.setCenterPoint(PLAYER_LATITUDE,PLAYER_LONGITUDE);
 		for (CSVData entry : Strings)
 		{
 			PLAYER_LIST.add(entry.username+"\n"+Double.toString(entry.distance)+"\n"+entry
 					.MAC_ADDR);
+			mMapView.addGeoPoint(entry.latitude, entry.longitude, 0xFF0000FF);
 		}
+		mMapView.update_map();
 	}
 
 	@Override
@@ -193,12 +210,24 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		return super.onOptionsItemSelected(item);
 	}
 
+	/**
+	 * a temporary storage that is used to sort by distance from player
+	 */
 	private class CSVData implements Comparable<CSVData>
 	{
 		public String username;
 		public double distance;
 		public String MAC_ADDR;
 
+		// GeoLocation, for MapView
+		public double latitude;
+		public double longitude;
+
+		/**
+		 * Allows for comparison by distance
+		 * @param another entry that is being compared against
+		 * @return -1 for less than, 0 for equals, 1 for greater than
+		 */
 		@Override
 		public int compareTo(CSVData another)
 		{
@@ -206,6 +235,10 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		}
 	}
 
+	/**
+	 * Handles HttpService Events
+	 * e.g. when HttpService reads in a CSV from the server
+	 */
 	class HttpHandler extends Handler
 	{
 		@Override
@@ -220,6 +253,9 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		}
 	}
 
+	/**
+	 * basically a timer that calls for a list of users from a server
+	 */
 	class HttpGetHandler extends Handler
 	{
 		@Override
@@ -227,8 +263,10 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		{
 			if (PLAYER_LATITUDE == -999 || PLAYER_LATITUDE < -900)
 			{
-				PLAYER_LIST.clear();
 				PLAYER_LIST.add("Waiting for Location.");
+				Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+				PLAYER_LATITUDE = location.getLatitude();
+				PLAYER_LONGITUDE = location.getLongitude();
 				sleep(500 * Constants.HTTP_GET_CSV_DELAY);
 				return;
 			}
@@ -237,6 +275,9 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 			sleep(1000 * Constants.HTTP_GET_CSV_DELAY);
 		}
 
+		/**
+		 * allows for timed calling of events in its separate thread
+		 */
 		public void sleep(long milliseconds)
 		{
 			removeMessages(0);
