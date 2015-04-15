@@ -44,8 +44,12 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 	private ListView mListView;
 
 	private HttpHandler mHttpHandler = new HttpHandler();
+	private HttpGetHandler mHttpGetHandler = new HttpGetHandler();
 	private HttpService mHttpService = new HttpService(mHttpHandler);
 
+	// hard coded for testing purposes
+	private double PLAYER_LATITUDE = 45;
+	private double PLAYER_LONGITUDE = -70;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -58,7 +62,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
 		mListView.setAdapter(PLAYER_LIST);
 		mListView.setOnItemClickListener(this);
-		mHttpService.getCSV();
+		mHttpGetHandler.sleep(1);
 	}
 
 	public void onItemClick(AdapterView<?> adapterView, View view, int arg2, long arg3)
@@ -68,6 +72,27 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		String MAC_ADDRESS = view_string.substring(view_string.length() - 17);
 
 		Toast.makeText(this, MAC_ADDRESS, Toast.LENGTH_LONG).show();
+	}
+
+	/**
+	 * Haversine formula to get distances by lat/lon
+	 */
+	private double getDistance(double lat1, double lat2, double lon1, double lon2)
+	{
+		double[] lat_rads = new double[2];
+		lat_rads[0] = lat1 * Math.PI / 180;
+		lat_rads[1] = lat2 * Math.PI /180;
+
+		double delta_lat = (lat2 - lat1) * Math.PI / 180;
+		double delta_lon = (lon2 - lon1) * Math.PI / 180;
+
+		double a = Math.pow(Math.sin(delta_lat / 2), 2) +
+				   Math.cos(lat_rads[0]) * Math.cos(lat_rads[1]) *
+				   Math.pow(Math.sin(delta_lon/2), 2);
+
+		double b = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+		return ((double)Constants.APPROX_RAD_EARTH) * b;
 	}
 
 	/**
@@ -84,7 +109,9 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 			CSVData entry = new CSVData();
 			String[] split_string = string.split(",");
 			entry.username = split_string[0];
-			entry.distance = Double.parseDouble(split_string[1]);
+			entry.distance = getDistance(
+					Double.parseDouble(split_string[1]), PLAYER_LATITUDE,
+					Double.parseDouble(split_string[2]), PLAYER_LONGITUDE);
 			entry.MAC_ADDR = split_string[3];
 
 			Strings.add(entry);
@@ -144,7 +171,29 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		@Override
 		public void handleMessage(Message msg)
 		{
-			processCSV((String)msg.obj);
+			switch (msg.what)
+			{
+				case Constants.MESSAGE_NEW_CSV:
+					processCSV((String)msg.obj);
+					break;
+			}
+		}
+	}
+
+	class HttpGetHandler extends Handler
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			mHttpService.recreateTask();
+			mHttpService.getCSV();
+			sleep(1000 * Constants.HTTP_GET_CSV);
+		}
+
+		public void sleep(long milliseconds)
+		{
+			removeMessages(0);
+			sendMessageDelayed(obtainMessage(0), milliseconds);
 		}
 	}
 }

@@ -34,11 +34,16 @@ public class HttpService
 {
 	HttpURLConnection connection;
 	private Handler mHandler;
-	private getCSVTask mGetCSVTask = new getCSVTask();
+	private getCSVTask mGetCSVTask;
 
 	public HttpService(Handler handler)
 	{
 		mHandler = handler;
+	}
+
+	public void recreateTask()
+	{
+		mGetCSVTask = new getCSVTask();
 	}
 
 	public void getCSV()
