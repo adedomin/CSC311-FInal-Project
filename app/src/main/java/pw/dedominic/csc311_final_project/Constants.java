@@ -26,5 +26,5 @@ public interface Constants
 
 	public final int MESSAGE_NEW_CSV = 1;
 
-	public final long HTTP_GET_CSV = 15;
+	public final long HTTP_GET_CSV_DELAY = 15;
 }

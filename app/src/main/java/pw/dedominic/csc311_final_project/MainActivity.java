@@ -17,6 +17,10 @@
 
 package pw.dedominic.csc311_final_project;
 
+import android.content.Context;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
@@ -47,9 +51,15 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 	private HttpGetHandler mHttpGetHandler = new HttpGetHandler();
 	private HttpService mHttpService = new HttpService(mHttpHandler);
 
-	// hard coded for testing purposes
-	private double PLAYER_LATITUDE = 45;
-	private double PLAYER_LONGITUDE = -70;
+	// -999 means uninitialized
+	private double PLAYER_LATITUDE = -999;
+	private double PLAYER_LONGITUDE = -999;
+
+	// location services
+	LocationManager mLocationManager;
+
+	// locationListener
+	LocationListener mLocationListener;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -63,6 +73,36 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		mListView.setAdapter(PLAYER_LIST);
 		mListView.setOnItemClickListener(this);
 		mHttpGetHandler.sleep(1);
+		mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		mLocationListener = new LocationListener()
+		{
+			@Override
+			public void onLocationChanged(Location location)
+			{
+				PLAYER_LATITUDE = location.getLatitude();
+				PLAYER_LONGITUDE = location.getLongitude();
+			}
+
+			@Override
+			public void onStatusChanged(String provider, int status, Bundle extras)
+			{
+
+			}
+
+			@Override
+			public void onProviderEnabled(String provider)
+			{
+
+			}
+
+			@Override
+			public void onProviderDisabled(String provider)
+			{
+
+			}
+		};
+		mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
+		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
 	}
 
 	public void onItemClick(AdapterView<?> adapterView, View view, int arg2, long arg3)
@@ -185,9 +225,16 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		@Override
 		public void handleMessage(Message msg)
 		{
+			if (PLAYER_LATITUDE == -999 || PLAYER_LATITUDE < -900)
+			{
+				PLAYER_LIST.clear();
+				PLAYER_LIST.add("Waiting for Location.");
+				sleep(500 * Constants.HTTP_GET_CSV_DELAY);
+				return;
+			}
 			mHttpService.recreateTask();
 			mHttpService.getCSV();
-			sleep(1000 * Constants.HTTP_GET_CSV);
+			sleep(1000 * Constants.HTTP_GET_CSV_DELAY);
 		}
 
 		public void sleep(long milliseconds)

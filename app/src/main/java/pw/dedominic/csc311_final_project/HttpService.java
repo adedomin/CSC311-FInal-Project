@@ -78,7 +78,6 @@ public class HttpService
 					data_string += "\n";
 					builder.append(data_string);
 				}
-				Log.e("test", builder.toString());
 				mHandler.obtainMessage(1, builder.toString()).sendToTarget();
 			}
 			catch (IOException e)
