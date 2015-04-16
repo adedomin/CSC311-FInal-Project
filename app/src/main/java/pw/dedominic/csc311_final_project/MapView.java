@@ -51,7 +51,7 @@ public class MapView extends View
 	 * In C this would be a Macro.
 	 * Sets map boundaries based on Constant Value
 	 * </p>
-	 * @param x a longitude in decimal degress
+	 * @param x a longitude in decimal degrees
 	 * @return difference of x minus an offset (0.001)
 	 */
 	private double map_left_boundary(double x)
@@ -63,7 +63,7 @@ public class MapView extends View
 	 * In C this would be a Macro.
 	 * Sets map boundary based on Constant Value
 	 * </p>
-	 * @param x a longitude in decimal degress
+	 * @param x a longitude in decimal degrees
 	 * @return sum of x minus an offset (0.001)
 	 */
 	private double map_right_boundary(double x)

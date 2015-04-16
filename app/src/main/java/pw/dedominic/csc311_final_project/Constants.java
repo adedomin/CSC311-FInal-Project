@@ -40,4 +40,7 @@ public interface Constants
 	public final int VIEW_BALL_RADIUS = 10;
 	public final double PLAYER_MAP_VIEW_OFFSET = .001;
 
+	// login activity types
+	public final String INTENT_USER_NAME_KEY = "USERNAME";
+	public final String INTENT_PASSWORD_KEY = "PASSWORD";
 }

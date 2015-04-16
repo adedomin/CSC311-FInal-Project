@@ -17,8 +17,10 @@
 
 package pw.dedominic.csc311_final_project;
 
+import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -26,7 +28,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -60,6 +61,10 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	private double PLAYER_LATITUDE = -999;
 	private double PLAYER_LONGITUDE = -999;
 
+	private String USER_NAME;
+	private String PASSWORD;
+	private String TEAM_NAME;
+
 	// location services
 	LocationManager mLocationManager;
 
@@ -72,11 +77,7 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		PLAYER_LIST = new ArrayAdapter<String>(this, R.layout.activity_text);
-		mListView = (ListView) findViewById(R.id.listView);
-
-		mListView.setAdapter(PLAYER_LIST);
-		mListView.setOnItemClickListener(this);
+		// ready GPS unit
 		mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 		mLocationListener = new LocationListener()
 		{
@@ -108,10 +109,8 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
 		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
 
-		mMapView = (MapView) findViewById(R.id.mapView);
-		mMapView.update_map();
-
-		mHttpGetHandler.handleMessage(Message.obtain());
+		Intent intent = new Intent(this, LoginActivity.class);
+		startActivityForResult(intent, 0);
 	}
 
 	public void onItemClick(AdapterView<?> adapterView, View view, int arg2, long arg3)
@@ -121,6 +120,32 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		String MAC_ADDRESS = view_string.substring(view_string.length() - 17);
 
 		Toast.makeText(this, MAC_ADDRESS, Toast.LENGTH_LONG).show();
+	}
+
+	public void onActivityResult(int req_code, int result_code, Intent data)
+	{
+		if (result_code == Activity.RESULT_OK)
+		{
+			USER_NAME = data.getStringExtra(Constants.INTENT_USER_NAME_KEY);
+			Toast.makeText(this, USER_NAME, Toast.LENGTH_LONG).show();
+			initializeViews();
+		}
+	}
+
+	public void initializeViews()
+	{
+		// list view init
+		PLAYER_LIST = new ArrayAdapter<String>(this, R.layout.activity_text);
+		mListView = (ListView) findViewById(R.id.listView);
+		mListView.setAdapter(PLAYER_LIST);
+		mListView.setOnItemClickListener(this);
+
+		// map view init
+		mMapView = (MapView) findViewById(R.id.mapView);
+		mMapView.update_map();
+
+		// get data now
+		mHttpGetHandler.handleMessage(Message.obtain());
 	}
 
 	/**

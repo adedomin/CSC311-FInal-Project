@@ -19,7 +19,6 @@ package pw.dedominic.csc311_final_project;
 
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
