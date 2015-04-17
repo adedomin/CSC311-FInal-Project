@@ -25,9 +25,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 /**
- * Activity that gets user's username and password
- * </p>
- * Password is meaningless currently, and likely will be till final
+ * Activity that gets user's username and password.
+ * Password is meaningless currently, and likely will be till final.
  * Verification will also be added later
  */
 public class LoginActivity extends Activity

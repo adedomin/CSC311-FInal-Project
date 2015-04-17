@@ -28,10 +28,11 @@ package pw.dedominic.csc311_final_project;
 		import java.util.Vector;
 
 /**
- * Simple map view that renders points only
- * no imaged map
- * </p>
+ * Simple map view that renders points only.
+ * Does not render an image background.
+ * <p>
  * The map is suppose to be roughly ~100 meters along it's longest side.
+ * </p>
  */
 public class MapView extends View
 {
@@ -48,9 +49,8 @@ public class MapView extends View
 	private boolean IS_READY = false;
 
 	/**
-	 * In C this would be a Macro.
 	 * Sets map boundaries based on Constant Value
-	 * </p>
+	 *
 	 * @param x a longitude in decimal degrees
 	 * @return difference of x minus an offset (0.001)
 	 */
@@ -60,9 +60,8 @@ public class MapView extends View
 	}
 
 	/**
-	 * In C this would be a Macro.
 	 * Sets map boundary based on Constant Value
-	 * </p>
+	 *
 	 * @param x a longitude in decimal degrees
 	 * @return sum of x minus an offset (0.001)
 	 */
@@ -73,7 +72,7 @@ public class MapView extends View
 
 	/**
 	 * Sets bottom map boundary based on latitude given
-	 * </p>
+	 * <p>
 	 * Note, this constant isn't working as expected,
 	 * random numbers are thrown to make it sort of work
 	 * </p>
@@ -98,6 +97,12 @@ public class MapView extends View
 		PLAYERS_POINT = new PlayerPoint(-100,-100,0xFF000000);
 	}
 
+	/**
+	 * Sets the center point which all points nearby will draw around.
+	 *
+	 * @param lat latitude in decimal degrees
+	 * @param lon longitude in decimal degrees
+	 */
 	public void setCenterPoint(double lat, double lon)
 	{
 		CENTER_LOCATION_LATITUDE = lat;
@@ -106,10 +111,7 @@ public class MapView extends View
 		PLAYERS_POINT.setXY((float)xy[0], (float)xy[1]);
 	}
 
-	/**
-	 * Draws map when invalidate() is called
-	 * called every 1000/30 milliseconds (30 FPS)
-	 */
+	/** Draws map when invalidate() is called. */
 	@Override
 	protected void onDraw(Canvas canvas)
 	{
@@ -129,26 +131,22 @@ public class MapView extends View
 		}
 	}
 
-	/**
-	 * calls invalidate to force the view to redraw itself
-	 */
+	/** Calls invalidate to force the view to redraw itself. */
 	public void update_map()
 	{
 		invalidate();
 		IS_READY = true;
 	}
 
-	/**
-	 * deletes previous points
-	 */
+	/** Deletes previous points. */
 	public void clear_map()
 	{
 		POINTS.clear();
 	}
 
 	/**
-	 * adds point to vector
-	 * </p>
+	 * Adds point to vector.
+	 *
 	 * @param x x coord
 	 * @param y y coord
 	 * @param c color as a hexadecimal ARGB number
@@ -159,9 +157,9 @@ public class MapView extends View
 	}
 
 	/**
-	 * Add Point using Latitude and Longitude
-	 * calls decimalDegreesToPixel then addPoint
-	 * </p>
+	 * Add Point using Latitude and Longitude.
+	 * Calls decimalDegreesToPixel then addPoint.
+	 *
 	 * @param lat latitude in decimal degrees
 	 * @param lon longitude in decimal degrees
 	 * @param c color as a hexadecimal ARGB number
@@ -176,10 +174,10 @@ public class MapView extends View
 	}
 
 	/**
-	 * true mercator projection.
+	 * True mercator projection.
 	 * Converts given decimal degree values
 	 * and converts them to pixels on device's screen
-	 * </p>
+	 *
 	 * @param lat latitude in decimal degrees
 	 * @param lon longitude in decimal degrees
 	 * @return double array with an (x,y) coordinate pair

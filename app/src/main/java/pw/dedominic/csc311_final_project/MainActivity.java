@@ -18,7 +18,6 @@
 package pw.dedominic.csc311_final_project;
 
 import android.app.Activity;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -28,8 +27,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -41,18 +38,19 @@ import java.util.Collections;
 import java.util.Vector;
 
 
+/**
+ * The entry point of the app.
+ */
 public class MainActivity extends FragmentActivity implements AdapterView.OnItemClickListener
 {
-	// activity has multiple views
-	FragmentManager mFragmentManager;
-
-	// list of players in a list view
+	/** list of players in a list view */
 	private ArrayAdapter<String> PLAYER_LIST;
 	private ListView mListView;
 
-	// map view of nearby points
+	/** map view of nearby points */
 	private MapView mMapView;
 
+	/** Various Handlers for input output of network services */
 	private HttpHandler mHttpHandler = new HttpHandler();
 	private HttpGetHandler mHttpGetHandler = new HttpGetHandler();
 	private HttpService mHttpService = new HttpService(mHttpHandler);
@@ -113,6 +111,16 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		startActivityForResult(intent, 0);
 	}
 
+	/**
+	 * Pertains to List View's array adapter PLAYER_LIST.
+	 * Clicking on a user's name will initiate a battle with said
+	 * player if a bluetooth connection can be made
+	 *
+	 * @param adapterView parent view
+	 * @param view the entry in the list view clicked
+	 * @param arg2 not used, required
+	 * @param arg3 not used, required
+	 */
 	public void onItemClick(AdapterView<?> adapterView, View view, int arg2, long arg3)
 	{
 		String view_string = ((TextView) view).getText().toString();
@@ -122,6 +130,13 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		Toast.makeText(this, MAC_ADDRESS, Toast.LENGTH_LONG).show();
 	}
 
+	/**
+	 * When Login activity finishes, this method is called
+	 *
+	 * @param req_code code the activity was called with.
+	 * @param result_code if the result was a success or a failure
+	 * @param data includes any values pertaining to the request.
+	 */
 	public void onActivityResult(int req_code, int result_code, Intent data)
 	{
 		if (result_code == Activity.RESULT_OK)
@@ -132,6 +147,10 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		}
 	}
 
+	/**
+	 * This function is called after Login View finishes.
+	 * This function builds the UI views that make up this activity.
+	 */
 	public void initializeViews()
 	{
 		// list view init
@@ -149,7 +168,13 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	}
 
 	/**
-	 * Haversine formula to get distances by lat/lon
+	 * Haversine formula to get distances of two points.
+	 * Points are given in Latitude and Longitude.
+	 *
+	 * @param lat1 latitude of point one
+	 * @param lon1 longitude of point one
+	 * @param lat2 latitude of point two
+	 * @param lon2 longitude of point two
 	 */
 	private double getDistance(double lat1, double lat2, double lon1, double lon2)
 	{
@@ -210,33 +235,10 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		mMapView.update_map();
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
-	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.menu_main, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-
-		//noinspection SimplifiableIfStatement
-		if (id == R.id.action_settings)
-		{
-			return true;
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
 	/**
-	 * a temporary storage that is used to sort by distance from player
+	 * A temporary storage unit to allow for sorting of
+	 * incoming CSV data.
+	 * This class sorts by shortest distance from the player in meters.
 	 */
 	private class CSVData implements Comparable<CSVData>
 	{
@@ -250,10 +252,10 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 
 		/**
 		 * Allows for comparison by distance
+		 *
 		 * @param another entry that is being compared against
 		 * @return -1 for less than, 0 for equals, 1 for greater than
 		 */
-		@Override
 		public int compareTo(CSVData another)
 		{
 			return Double.compare(this.distance, another.distance);
@@ -266,6 +268,12 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	 */
 	class HttpHandler extends Handler
 	{
+		/**
+		 * HttpService will send data back to the main activity this way.
+		 *
+		 * @param msg a message that contains a string and an int describing
+		 *            the type of data the string holds.
+		 */
 		@Override
 		public void handleMessage(Message msg)
 		{
@@ -283,6 +291,11 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	 */
 	class HttpGetHandler extends Handler
 	{
+		/**
+		 * Messages trigger handler to fetch server information.
+		 *
+		 * @param msg the message that was sent
+		 */
 		@Override
 		public void handleMessage(Message msg)
 		{
@@ -302,6 +315,8 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 
 		/**
 		 * allows for timed calling of events in its separate thread
+		 *
+		 * @param milliseconds time in milliseconds to delay sending a message to self
 		 */
 		public void sleep(long milliseconds)
 		{

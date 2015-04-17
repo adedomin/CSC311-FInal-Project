@@ -19,28 +19,29 @@ package pw.dedominic.csc311_final_project;
 
 /**
  * Constants.
- * </p>
  * Contains message types, algorithmically important values.
  */
 public interface Constants
 {
-	// needed to calculate distance from player
+	/** needed to calculate distance from player */
 	public final int APPROX_RAD_EARTH = 6371000; // meters
 
 	public final int MESSAGE_NEW_CSV = 0;
 
-	// time in seconds to query for list of users
+	/** time in seconds to query for list of users */
 	public final long HTTP_GET_CSV_DELAY = 15; // seconds
 
-	// server/http related values
+	/** server/http related values */
 	public final String SERVER_DOMAIN_NAME = "dedominic.pw";
+	/** server/http related values */
 	public final String SERVER_GET_ALL_USERS_PHP = "/csc-311/php/get_users.php";
 
-	// MapView Layout constants
+	/** MapView Layout constants */
 	public final int VIEW_BALL_RADIUS = 10;
 	public final double PLAYER_MAP_VIEW_OFFSET = .001;
 
-	// login activity types
+	/** login activity return types */
 	public final String INTENT_USER_NAME_KEY = "USERNAME";
+	/** login activity return types */
 	public final String INTENT_PASSWORD_KEY = "PASSWORD";
 }

@@ -32,20 +32,18 @@ import java.net.URL;
  */
 public class HttpService
 {
-	// HTTP Client
+	/** HTTP Client */
 	HttpURLConnection connection;
 
-	// For communication with activity
+	/** For communication back to calling activity */
 	private Handler mHandler;
 
-	/**
-	 * AsyncTask that fetches a CSV from a server.
-	 */
+	/** AsyncTask that fetches a CSV from a server. */
 	private getCSVTask mGetCSVTask;
 
 	/**
 	 * Constructor that requires a handler to process data
-	 * </p>
+	 *
 	 * @param handler handler from a calling activity
 	 *                allows for communication back to activity
 	 */
@@ -62,7 +60,7 @@ public class HttpService
 		mGetCSVTask = new getCSVTask();
 	}
 
-	// allows for calling of task outside of task;
+	/** allows for calling of task outside of task; */
 	public void getCSV()
 	{
 		mGetCSVTask.execute();
@@ -72,8 +70,9 @@ public class HttpService
 	 * This task is responsible for talking with the server for user information.
 	 * CSV columns delimited by a comma.
 	 * Entries are delimited by a linefeed.
-	 * </p>
+	 * <p>
 	 * CSV column values: username, latitude, longitude, MAC_ADDRESS
+	 * </p>
 	 */
 	private class getCSVTask extends AsyncTask<Void, Void, Void>
 	{
@@ -89,7 +88,7 @@ public class HttpService
 				return null;
 			}
 
-			String data_string = "";
+			String data_string;
 			BufferedReader reader;
 			StringBuilder builder;
 			try
