@@ -19,15 +19,17 @@ package pw.dedominic.csc311_final_project;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.TextView;
 
-
+/**
+ * Activity that gets user's username and password
+ * </p>
+ * Password is meaningless currently, and likely will be till final
+ * Verification will also be added later
+ */
 public class LoginActivity extends Activity
 {
 
@@ -41,7 +43,11 @@ public class LoginActivity extends Activity
 		setContentView(R.layout.activity_login2);
 
 		mEditText = (EditText) findViewById(R.id.editText2);
-		mEditText.setOnEditorActionListener(new TextView.OnEditorActionListener()
+		mEditText2 = (EditText) findViewById(R.id.editText);
+		/**
+		 * When user hits enter it sends what the edit text view contains
+		 */
+		mEditText2.setOnEditorActionListener(new TextView.OnEditorActionListener()
 		{
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
@@ -49,6 +55,7 @@ public class LoginActivity extends Activity
 				Intent intent = new Intent();
 
 				intent.putExtra(Constants.INTENT_USER_NAME_KEY, mEditText.getText().toString());
+				intent.putExtra(Constants.INTENT_PASSWORD_KEY, mEditText2.getText().toString());
 
 				setResult(Activity.RESULT_OK, intent);
 				finish();

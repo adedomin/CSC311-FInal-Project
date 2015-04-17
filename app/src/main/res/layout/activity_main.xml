@@ -2,21 +2,33 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context=".MainActivity" >
-    <RelativeLayout
+                tools:context=".MainActivity"
+                android:baselineAligned="false">
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="vertical">
         <ListView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="top"
+            android:layout_weight="2"
             android:id="@+id/listView"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true"
+            android:background="@drawable/border_background"
         />
-    </RelativeLayout>
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="top"
+            android:layout_weight="1"
+            android:id="@+id/textView"
+            android:background="@drawable/border_background"
+            android:text="@string/Empty_message"
+            android:textSize="20dp"
+        />
+    </LinearLayout>
     <RelativeLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -29,6 +41,7 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
             android:layout_alignParentEnd="true"
+            android:background="@drawable/border_background"
         />
     </RelativeLayout>
 <!--
