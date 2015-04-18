@@ -19,6 +19,7 @@ package pw.dedominic.csc311_final_project;
 
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,6 +45,9 @@ public class HttpService
 	/** AsyncTask that fetches pending player messages */
 	private getMessageTask mGetMessageTask;
 
+	/** AsyncTask that uploads user's location */
+	private uploadLocationTask mUploadLocationTask;
+
 	/**
 	 * Constructor that requires a handler to process data
 	 *
@@ -58,9 +62,19 @@ public class HttpService
 	/**
 	 * AsyncTasks can only be called once, so to call it again, it must be recreated
 	 */
-	public void recreateTask()
+	public void recreateCSVTask()
 	{
 		mGetCSVTask = new getCSVTask();
+	}
+
+	public void recreateMessageTask()
+	{
+		mGetMessageTask = new getMessageTask();
+	}
+
+	public void  recreateUploadLocationTask()
+	{
+		mUploadLocationTask = new uploadLocationTask();
 	}
 
 	/** allows for calling of task outside of task; */
@@ -71,7 +85,7 @@ public class HttpService
 		{
 			url = new URL(Constants.SERVER_DOMAIN_NAME +
 					      Constants.SERVER_GET_ALL_USERS_PHP +
-						  "?username=\""+username+"\"");
+						  "?user="+username);
 		}
 		catch (MalformedURLException e)
 		{
@@ -87,12 +101,33 @@ public class HttpService
 		{
 			url = new URL(Constants.SERVER_DOMAIN_NAME +
 						  Constants.SERVER_GET_PLAYER_MESSAGE +
-						  "?username=\""+user_name+"\"&teamname=\""+team_name+"\"");
+						  "?user="+user_name+"&team="+team_name);
+		}
+		catch (MalformedURLException e)
+		{
+			Log.e("Test", "test");
+			return;
+		}
+
+		mGetMessageTask.execute(url);
+	}
+
+	public void uploadLocation(String user_name, double latitude, double longitude)
+	{
+		URL url;
+		try
+		{
+			url = new URL(Constants.SERVER_DOMAIN_NAME +
+						  Constants.SERVER_UPLOAD_PLAYER_LOCATION +
+						  "?user=\"" + user_name +
+					      "\"&lati=\"" + Double.toString(latitude) +
+						  "\"&long=\"" + Double.toString(longitude) + "\"");
 		}
 		catch (MalformedURLException e)
 		{
 			return;
 		}
+		mUploadLocationTask.execute(url);
 	}
 
 	/**
@@ -146,11 +181,29 @@ public class HttpService
 					data_string += "\n";
 					builder.append(data_string);
 				}
+				Log.e("string", builder.toString());
 				mHandler.obtainMessage(Constants.MESSAGE_NEW_MESSAGE, builder.toString()).sendToTarget();
 			}
 			catch (IOException e)
 			{
 			}
+
+			return null;
+		}
+	}
+
+	private class uploadLocationTask extends AsyncTask<URL, Void, Void>
+	{
+		protected Void doInBackground(URL... params)
+		{
+			try
+			{
+				connection = (HttpURLConnection) params[0].openConnection();
+			}
+			catch (IOException e)
+			{
+			}
+
 			return null;
 		}
 	}

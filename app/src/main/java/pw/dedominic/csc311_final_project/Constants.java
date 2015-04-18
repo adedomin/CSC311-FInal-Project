@@ -32,12 +32,16 @@ public interface Constants
 	/** time in seconds to query for list of users */
 	public final long HTTP_GET_CSV_DELAY = 15; // seconds
 
+	public final long HTTP_UPLOAD_LOCATION_DELAY = 7; // seconds
+
 	/** server/http related values */
 	public final String SERVER_DOMAIN_NAME = "https://dedominic.pw";
 	/** server/http related values */
 	public final String SERVER_GET_ALL_USERS_PHP = "/csc-311/php/get_users.php";
 	/** server/http related values */
 	public final String SERVER_GET_PLAYER_MESSAGE = "/csc-311/php/get_messages.php";
+	/** server/http related values */
+	public final String SERVER_UPLOAD_PLAYER_LOCATION = "/csc-311/php/upload_location.php";
 
 	/** MapView Layout constants */
 	public final int VIEW_BALL_RADIUS = 10;

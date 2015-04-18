@@ -125,7 +125,6 @@ public class MapView extends View
 	@Override
 	protected void onDraw(Canvas canvas)
 	{
-		Log.e("IN DRAW", "HELP");
 		super.onDraw(canvas);
 
 		if (!IS_READY)

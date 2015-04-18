@@ -27,6 +27,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -62,8 +63,8 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	private double PLAYER_LONGITUDE = -999;
 
 	private String USER_NAME;
-	private String PASSWORD;
-	private String TEAM_NAME;
+	private String PASSWORD = "";
+	private String TEAM_NAME = "";
 
 	// location services
 	LocationManager mLocationManager;
@@ -249,7 +250,9 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		String[] split_string = the_message.split("\n");
 		String[] entry = split_string[0].split(",");
 
-		mTextView.setText(entry[0]);
+		double distance = getDistance(Double.parseDouble(entry[1]), Double.parseDouble(entry[2]),
+									  PLAYER_LATITUDE, PLAYER_LONGITUDE);
+		mTextView.setText(entry[0]+"\n"+Double.toString(distance));
 
 		mMapView.setMESSAGE_POINT(Double.parseDouble(entry[1]), Double.parseDouble(entry[2]));
 		mMapView.update_map();
@@ -282,6 +285,29 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		}
 	}
 
+	class UploadLocation extends Handler
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			if (PLAYER_LATITUDE == -999 || PLAYER_LATITUDE < -900)
+			{
+				sleep(1000 * Constants.HTTP_UPLOAD_LOCATION_DELAY);
+				return;
+			}
+			mHttpService.recreateUploadLocationTask();
+			mHttpService.uploadLocation(USER_NAME, PLAYER_LATITUDE, PLAYER_LONGITUDE);
+
+			sleep(1000 * Constants.HTTP_UPLOAD_LOCATION_DELAY);
+		}
+
+		public void sleep(long milliseconds)
+		{
+			removeMessages(0);
+			sendMessageDelayed(obtainMessage(0), milliseconds);
+		}
+	}
+
 	/**
 	 * Handles HttpService Events
 	 * e.g. when HttpService reads in a CSV from the server
@@ -297,13 +323,28 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		@Override
 		public void handleMessage(Message msg)
 		{
+			String string = (String) msg.obj;
 			switch (msg.what)
 			{
 				case Constants.MESSAGE_NEW_CSV:
-					processCSV((String)msg.obj);
+					if (!string.isEmpty())
+					{
+						processCSV(string);
+					}
+					else
+					{
+						PLAYER_LIST.clear();
+						PLAYER_LIST.add("!!!No USERS in database!!!");
+					}
 					break;
 				case Constants.MESSAGE_NEW_MESSAGE:
-					processMsg((String)msg.obj);
+					if (!string.isEmpty())
+					{
+						processMsg(string);
+					}
+					else
+					{
+					}
 					break;
 			}
 		}
@@ -331,8 +372,11 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 				sleep(500 * Constants.HTTP_GET_CSV_DELAY);
 				return;
 			}
-			mHttpService.recreateTask();
+			mHttpService.recreateCSVTask();
 			mHttpService.getCSV(USER_NAME);
+			mHttpService.recreateMessageTask();
+			mHttpService.getMessages(USER_NAME, TEAM_NAME);
+
 			sleep(1000 * Constants.HTTP_GET_CSV_DELAY);
 		}
 
