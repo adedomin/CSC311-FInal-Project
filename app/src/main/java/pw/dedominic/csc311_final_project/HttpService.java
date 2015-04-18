@@ -41,6 +41,9 @@ public class HttpService
 	/** AsyncTask that fetches a CSV from a server. */
 	private getCSVTask mGetCSVTask;
 
+	/** AsyncTask that fetches pending player messages */
+	private getMessageTask mGetMessageTask;
+
 	/**
 	 * Constructor that requires a handler to process data
 	 *
@@ -61,9 +64,35 @@ public class HttpService
 	}
 
 	/** allows for calling of task outside of task; */
-	public void getCSV()
+	public void getCSV(String username)
 	{
-		mGetCSVTask.execute();
+		URL url;
+		try
+		{
+			url = new URL(Constants.SERVER_DOMAIN_NAME +
+					      Constants.SERVER_GET_ALL_USERS_PHP +
+						  "?username=\""+username+"\"");
+		}
+		catch (MalformedURLException e)
+		{
+			return;
+		}
+		mGetCSVTask.execute(url);
+	}
+
+	public void getMessages(String user_name, String team_name)
+	{
+		URL url;
+		try
+		{
+			url = new URL(Constants.SERVER_DOMAIN_NAME +
+						  Constants.SERVER_GET_PLAYER_MESSAGE +
+						  "?username=\""+user_name+"\"&teamname=\""+team_name+"\"");
+		}
+		catch (MalformedURLException e)
+		{
+			return;
+		}
 	}
 
 	/**
@@ -74,26 +103,16 @@ public class HttpService
 	 * CSV column values: username, latitude, longitude, MAC_ADDRESS
 	 * </p>
 	 */
-	private class getCSVTask extends AsyncTask<Void, Void, Void>
+	private class getCSVTask extends AsyncTask<URL, Void, Void>
 	{
-		protected Void doInBackground(Void... ignore)
+		protected Void doInBackground(URL... params)
 		{
-			URL url;
-			try
-			{
-				url = new URL("https://dedominic.pw/csc-311/php/get_users.php");
-			}
-			catch (MalformedURLException e)
-			{
-				return null;
-			}
-
 			String data_string;
 			BufferedReader reader;
 			StringBuilder builder;
 			try
 			{
-				connection = (HttpURLConnection) url.openConnection();
+				connection = (HttpURLConnection) params[0].openConnection();
 				reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 				builder = new StringBuilder();
 				while ((data_string = reader.readLine()) != null)
@@ -110,5 +129,29 @@ public class HttpService
 		}
 	}
 
-
+	private class getMessageTask extends AsyncTask<URL, Void, Void>
+	{
+		protected Void doInBackground(URL... params)
+		{
+			String data_string;
+			BufferedReader reader;
+			StringBuilder builder;
+			try
+			{
+				connection = (HttpURLConnection) params[0].openConnection();
+				reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+				builder = new StringBuilder();
+				while ((data_string = reader.readLine()) != null)
+				{
+					data_string += "\n";
+					builder.append(data_string);
+				}
+				mHandler.obtainMessage(Constants.MESSAGE_NEW_MESSAGE, builder.toString()).sendToTarget();
+			}
+			catch (IOException e)
+			{
+			}
+			return null;
+		}
+	}
 }

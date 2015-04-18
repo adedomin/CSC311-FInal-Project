@@ -47,6 +47,8 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	private ArrayAdapter<String> PLAYER_LIST;
 	private ListView mListView;
 
+	private TextView mTextView;
+
 	/** map view of nearby points */
 	private MapView mMapView;
 
@@ -159,6 +161,8 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		mListView.setAdapter(PLAYER_LIST);
 		mListView.setOnItemClickListener(this);
 
+		mTextView = (TextView) findViewById(R.id.textView);
+
 		// map view init
 		mMapView = (MapView) findViewById(R.id.mapView);
 		mMapView.update_map();
@@ -236,6 +240,22 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	}
 
 	/**
+	 * processes a string which contains a message to player or team from a desktop player.
+	 *
+	 * @param the_message A string with a message, latitude and longitude
+	 */
+	private void processMsg(String the_message)
+	{
+		String[] split_string = the_message.split("\n");
+		String[] entry = split_string[0].split(",");
+
+		mTextView.setText(entry[0]);
+
+		mMapView.setMESSAGE_POINT(Double.parseDouble(entry[1]), Double.parseDouble(entry[2]));
+		mMapView.update_map();
+	}
+
+	/**
 	 * A temporary storage unit to allow for sorting of
 	 * incoming CSV data.
 	 * This class sorts by shortest distance from the player in meters.
@@ -282,6 +302,9 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 				case Constants.MESSAGE_NEW_CSV:
 					processCSV((String)msg.obj);
 					break;
+				case Constants.MESSAGE_NEW_MESSAGE:
+					processMsg((String)msg.obj);
+					break;
 			}
 		}
 	}
@@ -309,7 +332,7 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 				return;
 			}
 			mHttpService.recreateTask();
-			mHttpService.getCSV();
+			mHttpService.getCSV(USER_NAME);
 			sleep(1000 * Constants.HTTP_GET_CSV_DELAY);
 		}
 

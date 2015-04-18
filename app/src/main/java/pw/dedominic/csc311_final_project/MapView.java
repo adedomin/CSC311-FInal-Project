@@ -42,6 +42,9 @@ public class MapView extends View
 	// player's point
 	private PlayerPoint PLAYERS_POINT;
 
+	// message point
+	private PlayerPoint MESSAGE_POINT;
+
 	// array of all map points
 	private Vector<PlayerPoint> POINTS = new Vector<>();
 
@@ -95,6 +98,7 @@ public class MapView extends View
 	{
 		super(context, attrs);
 		PLAYERS_POINT = new PlayerPoint(-100,-100,0xFF000000);
+		MESSAGE_POINT = new PlayerPoint(-100,-100,0xFFF7F7B9);
 	}
 
 	/**
@@ -111,6 +115,12 @@ public class MapView extends View
 		PLAYERS_POINT.setXY((float)xy[0], (float)xy[1]);
 	}
 
+	public void setMESSAGE_POINT(double lat, double lon)
+	{
+		double[] xy = decimalDegreesToPixels(lat, lon);
+		MESSAGE_POINT.setXY((float)xy[0], (float)xy[1]);
+	}
+
 	/** Draws map when invalidate() is called. */
 	@Override
 	protected void onDraw(Canvas canvas)
@@ -124,6 +134,7 @@ public class MapView extends View
 		}
 
 		PLAYERS_POINT.draw(canvas);
+		MESSAGE_POINT.draw(canvas);
 
 		for (PlayerPoint point : POINTS)
 		{
