@@ -27,7 +27,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -130,7 +129,10 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 
 		String MAC_ADDRESS = view_string.substring(view_string.length() - 17);
 
-		Toast.makeText(this, MAC_ADDRESS, Toast.LENGTH_LONG).show();
+		Intent intent = new Intent(this, BattleActivity.class);
+		intent.putExtra("MAC", MAC_ADDRESS);
+
+		startActivity(intent);
 	}
 
 	/**

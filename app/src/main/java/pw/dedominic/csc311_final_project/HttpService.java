@@ -19,7 +19,6 @@ package pw.dedominic.csc311_final_project;
 
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -105,7 +104,6 @@ public class HttpService
 		}
 		catch (MalformedURLException e)
 		{
-			Log.e("Test", "test");
 			return;
 		}
 
@@ -181,7 +179,6 @@ public class HttpService
 					data_string += "\n";
 					builder.append(data_string);
 				}
-				Log.e("string", builder.toString());
 				mHandler.obtainMessage(Constants.MESSAGE_NEW_MESSAGE, builder.toString()).sendToTarget();
 			}
 			catch (IOException e)

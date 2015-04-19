@@ -17,6 +17,7 @@
 
 package pw.dedominic.csc311_final_project;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -25,14 +26,8 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
-public class BattleActivity extends ActionBarActivity implements View.OnTouchListener
+public class BattleActivity extends Activity
 {
-	private double first_x = 0;
-	private double first_y = 0;
-
-	private double last_x = 0;
-	private double last_y = 0;
-
 	private String MAC_ADDR;
 
 	private BattleView mBattleView;
@@ -45,38 +40,9 @@ public class BattleActivity extends ActionBarActivity implements View.OnTouchLis
 
 		Intent intent = getIntent();
 
-		MAC_ADDR = intent.getStringExtra("MAC_ADDR");
-	}
+		MAC_ADDR = intent.getStringExtra("MAC");
 
-	public boolean onTouch(View v, MotionEvent e)
-	{
-		switch (e.getAction())
-		{
-			case MotionEvent.ACTION_DOWN:
-				first_x = e.getRawX();
-				first_y = e.getRawY();
-				break;
-			case MotionEvent.ACTION_MOVE:
-				break;
-			case MotionEvent.ACTION_UP:
-				last_x = e.getRawX();
-				last_y = e.getRawY();
-
-				if (getPointDistance(first_x, first_y, last_x, last_y) > .5)
-				{
-					// do something
-				}
-		}
-		return true;
-	}
-
-	public double getPointDistance(double x1, double y1, double x2, double y2)
-	{
-		return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-	}
-
-	public double getSlopeOfLine(double x1, double y1, double x2, double y2)
-	{
-		return (y2 - y1)/(x2 - x1);
+		mBattleView = (BattleView) findViewById(R.id.battleView);
+		mBattleView.update();
 	}
 }
