@@ -19,6 +19,7 @@ package pw.dedominic.csc311_final_project;
 
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -66,11 +67,13 @@ public class HttpService
 		mGetCSVTask = new getCSVTask();
 	}
 
+	/** allows for task to be called again; call before executing task */
 	public void recreateMessageTask()
 	{
 		mGetMessageTask = new getMessageTask();
 	}
 
+	/** allows for task to be called again; call before executing task */
 	public void  recreateUploadLocationTask()
 	{
 		mUploadLocationTask = new uploadLocationTask();
@@ -79,6 +82,7 @@ public class HttpService
 	/** allows for calling of task outside of task; */
 	public void getCSV(String username)
 	{
+		Log.e("Am I running","");
 		URL url;
 		try
 		{
@@ -88,11 +92,13 @@ public class HttpService
 		}
 		catch (MalformedURLException e)
 		{
+			Log.e("Failed","");
 			return;
 		}
 		mGetCSVTask.execute(url);
 	}
 
+	/** calls task from outside of class scope */
 	public void getMessages(String user_name, String team_name)
 	{
 		URL url;
@@ -110,16 +116,18 @@ public class HttpService
 		mGetMessageTask.execute(url);
 	}
 
-	public void uploadLocation(String user_name, double latitude, double longitude)
+	/** calls task from outside of class scope */
+	public void uploadLocation(String user_name, double latitude, double longitude, String MAC_ADDR)
 	{
 		URL url;
 		try
 		{
 			url = new URL(Constants.SERVER_DOMAIN_NAME +
 						  Constants.SERVER_UPLOAD_PLAYER_LOCATION +
-						  "?user=\"" + user_name +
-					      "\"&lati=\"" + Double.toString(latitude) +
-						  "\"&long=\"" + Double.toString(longitude) + "\"");
+						  "?user=" + user_name +
+					      "&lat=" + Double.toString(latitude) +
+						  "&lon=" + Double.toString(longitude)+
+						  "&mac=" + MAC_ADDR);
 		}
 		catch (MalformedURLException e)
 		{
@@ -140,6 +148,7 @@ public class HttpService
 	{
 		protected Void doInBackground(URL... params)
 		{
+			Log.e("Getting Messages", "");
 			String data_string;
 			BufferedReader reader;
 			StringBuilder builder;
@@ -153,15 +162,20 @@ public class HttpService
 					data_string += "\n";
 					builder.append(data_string);
 				}
+				Log.e("Message:", builder.toString());
 				mHandler.obtainMessage(Constants.MESSAGE_NEW_CSV, builder.toString()).sendToTarget();
 			}
 			catch (IOException e)
 			{
+				Log.e("FAILED TO GET DATA", e.getMessage());
 			}
 			return null;
 		}
 	}
 
+	/**
+	 * Gets messages from commander to player or team global.
+	 */
 	private class getMessageTask extends AsyncTask<URL, Void, Void>
 	{
 		protected Void doInBackground(URL... params)
@@ -189,13 +203,18 @@ public class HttpService
 		}
 	}
 
+	/**
+	 * Uploads information about user's location to server.
+	 */
 	private class uploadLocationTask extends AsyncTask<URL, Void, Void>
 	{
 		protected Void doInBackground(URL... params)
 		{
+			HttpURLConnection conn;
 			try
 			{
-				connection = (HttpURLConnection) params[0].openConnection();
+				conn = (HttpURLConnection) params[0].openConnection();
+				conn.getInputStream();
 			}
 			catch (IOException e)
 			{

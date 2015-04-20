@@ -40,7 +40,7 @@ public class BattleActivity extends Activity
 
 		Intent intent = getIntent();
 
-		MAC_ADDR = intent.getStringExtra("MAC");
+		MAC_ADDR = intent.getStringExtra(Constants.INTENT_MAC_ADDRESS);
 
 		mBattleView = (BattleView) findViewById(R.id.battleView);
 		mBattleView.update();

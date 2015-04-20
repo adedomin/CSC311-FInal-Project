@@ -18,6 +18,8 @@
 package pw.dedominic.csc311_final_project;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -27,6 +29,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -41,7 +44,7 @@ import java.util.Vector;
 /**
  * The entry point of the app.
  */
-public class MainActivity extends FragmentActivity implements AdapterView.OnItemClickListener
+public class MainActivity extends Activity implements AdapterView.OnItemClickListener
 {
 	/** list of players in a list view */
 	private ArrayAdapter<String> PLAYER_LIST;
@@ -55,15 +58,23 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	/** Various Handlers for input output of network services */
 	private HttpHandler mHttpHandler = new HttpHandler();
 	private HttpGetHandler mHttpGetHandler = new HttpGetHandler();
+	private UploadLocation mUploadLocation = new UploadLocation();
+	private BluetoothListener mBluetoothListener = new BluetoothListener();
+
 	private HttpService mHttpService = new HttpService(mHttpHandler);
 
 	// -999 means uninitialized
 	private double PLAYER_LATITUDE = -999;
 	private double PLAYER_LONGITUDE = -999;
+	private String PROVIDER;
 
 	private String USER_NAME;
 	private String PASSWORD = "";
 	private String TEAM_NAME = "";
+	private String MAC_ADDR;
+
+	private BluetoothAdapter mBluetoothAdapter;
+	private BluetoothService mBluetoothService;
 
 	// location services
 	LocationManager mLocationManager;
@@ -76,6 +87,9 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		MAC_ADDR = mBluetoothAdapter.getAddress();
 
 		// ready GPS unit
 		mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -107,7 +121,16 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 			}
 		};
 		mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+		if (mLocationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER))
+		{
+			mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0,
+					mLocationListener);
+			PROVIDER = LocationManager.NETWORK_PROVIDER;
+		}
+		else
+		{
+			PROVIDER = LocationManager.GPS_PROVIDER;
+		}
 
 		Intent intent = new Intent(this, LoginActivity.class);
 		startActivityForResult(intent, 0);
@@ -128,9 +151,11 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		String view_string = ((TextView) view).getText().toString();
 
 		String MAC_ADDRESS = view_string.substring(view_string.length() - 17);
+		BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(MAC_ADDRESS);
+		mBluetoothService.join(device);
 
 		Intent intent = new Intent(this, BattleActivity.class);
-		intent.putExtra("MAC", MAC_ADDRESS);
+		intent.putExtra(Constants.INTENT_MAC_ADDRESS, MAC_ADDRESS);
 
 		startActivity(intent);
 	}
@@ -147,7 +172,6 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		if (result_code == Activity.RESULT_OK)
 		{
 			USER_NAME = data.getStringExtra(Constants.INTENT_USER_NAME_KEY);
-			Toast.makeText(this, USER_NAME, Toast.LENGTH_LONG).show();
 			initializeViews();
 		}
 	}
@@ -172,6 +196,18 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 
 		// get data now
 		mHttpGetHandler.handleMessage(Message.obtain());
+		mUploadLocation.handleMessage(Message.obtain());
+
+		mBluetoothService = new BluetoothService(mBluetoothListener);
+		mBluetoothService.listen();
+	}
+
+	public void connectionStarted()
+	{
+		Intent intent = new Intent(this, BattleActivity.class);
+		intent.putExtra(Constants.INTENT_MAC_ADDRESS, mBluetoothService.getConnectedAddress());
+
+		startActivity(intent);
 	}
 
 	/**
@@ -287,8 +323,16 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		}
 	}
 
+	/**
+	 * Basically a timer that uploads user location periodically
+	 */
 	class UploadLocation extends Handler
 	{
+		/**
+		 * Checks if location is set before uploading user data
+		 *
+		 * @param msg a blank message that contains no relevant data
+		 */
 		@Override
 		public void handleMessage(Message msg)
 		{
@@ -298,7 +342,7 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 				return;
 			}
 			mHttpService.recreateUploadLocationTask();
-			mHttpService.uploadLocation(USER_NAME, PLAYER_LATITUDE, PLAYER_LONGITUDE);
+			mHttpService.uploadLocation(USER_NAME, PLAYER_LATITUDE, PLAYER_LONGITUDE, MAC_ADDR);
 
 			sleep(1000 * Constants.HTTP_UPLOAD_LOCATION_DELAY);
 		}
@@ -365,11 +409,14 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		@Override
 		public void handleMessage(Message msg)
 		{
+			Log.e("Running Handler", "");
 			if (PLAYER_LATITUDE == -999 || PLAYER_LATITUDE < -900)
 			{
+				Log.e("Waiting for Location", "");
 				PLAYER_LIST.add("Waiting for Location.");
-				Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+				Location location = mLocationManager.getLastKnownLocation(PROVIDER);
 				PLAYER_LATITUDE = location.getLatitude();
+				Log.e("Latitude", Double.toString(PLAYER_LATITUDE));
 				PLAYER_LONGITUDE = location.getLongitude();
 				sleep(500 * Constants.HTTP_GET_CSV_DELAY);
 				return;
@@ -389,8 +436,26 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 		 */
 		public void sleep(long milliseconds)
 		{
+			Log.e("delaying send msg", "");
 			removeMessages(0);
 			sendMessageDelayed(obtainMessage(0), milliseconds);
+		}
+	}
+
+	private class BluetoothListener extends Handler
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			switch (msg.what)
+			{
+				case Constants.CONNECTED:
+					connectionStarted();
+					break;
+				case Constants.DISCONNECTED:
+					Toast.makeText(getApplicationContext(), "Failed to Connect", Toast.LENGTH_LONG);
+					break;
+			}
 		}
 	}
 }

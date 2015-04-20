@@ -28,7 +28,7 @@
     <EditText
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:inputType="text"
+        android:inputType="textNoSuggestions"
         android:ems="10"
         android:id="@+id/editText2"
         android:imeOptions="actionNext"
