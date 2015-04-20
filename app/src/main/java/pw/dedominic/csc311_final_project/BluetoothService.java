@@ -52,11 +52,21 @@ public class BluetoothService
 	private ConnectedThread connected;
 	private boolean isConnect = false;
 
+	/**
+	 * Bluetooth service needs some way to communicate with an activity
+	 *
+	 * @param rHandle a handler in the host activity that accepts messages
+	 */
 	public BluetoothService(Handler rHandle)
 	{
 		readHandle = rHandle;
 	}
 
+	/**
+	 * Messages activity indicating a change in the connection state
+	 *
+	 * @param connect if false, means disconnected, true if connection is established
+	 */
 	private void connectionChange(boolean connect)
 	{
 		if (connect == isConnect)
@@ -69,18 +79,30 @@ public class BluetoothService
 		isConnect = connect;
 	}
 
+	/** tells service to start listening for bluetooth connections */
 	public void listen()
 	{
 		listener = new ListenThread();
 		listener.start();
 	}
 
+	/**
+	 * Connects to a target bluetooth device
+	 *
+	 * @param host the bluetooth device to connect to
+	 */
 	public void join(BluetoothDevice host)
 	{
 		joiner = new JoinThread(host);
 		joiner.start();
 	}
 
+	/**
+	 * Takes a bluetooth socket that connects two devices.
+	 * Sets up a thread to manage the connection.
+	 *
+	 * @param socket a connected bluetooth socket
+	 */
 	public void connect(BluetoothSocket socket)
 	{
 		connected = new ConnectedThread(socket);
@@ -88,6 +110,7 @@ public class BluetoothService
 		connected.start();
 	}
 
+	/** Kills all connections and threads */
 	public void killAll()
 	{
 		if (listener != null)
@@ -109,6 +132,7 @@ public class BluetoothService
 		}
 	}
 
+	/** takes data to be written to the socket's output stream */
 	public void write(char type, float val)
 	{
 		if (connected == null)
@@ -119,6 +143,7 @@ public class BluetoothService
 		connected.write(type, val);
 	}
 
+	/** returns the MAC ADDRESS of the enemy connected */
 	public String getConnectedAddress()
 	{
 		return connected.getConnectionAddress();
@@ -180,6 +205,9 @@ public class BluetoothService
 		}
 	}
 
+	/**
+	 * Connects to another device located at provided MAC Address.
+	 */
 	private class JoinThread extends Thread
 	{
 		private final BluetoothSocket socket;
@@ -226,6 +254,10 @@ public class BluetoothService
 		}
 	}
 
+	/**
+	 * This thread manages the connection between two bluetooth devices.
+	 * Handles reading and writing from the socket.
+	 */
 	private class ConnectedThread extends Thread
 	{
 		private final BluetoothSocket connection;

@@ -58,8 +58,8 @@ public interface Constants
 	/** describes if client should connect or listen */
 	public final int INTENT_LISTEN_FOR = 1;
 
-	/** Bluetooth connection status -> CONNECTED */
+	/** Bluetooth connection status CONNECTED */
 	public final int CONNECTED = 0;
-	/** Bluetooth connection status -> DISCONNECTED */
+	/** Bluetooth connection status DISCONNECTED */
 	public final int DISCONNECTED = 1;
 }

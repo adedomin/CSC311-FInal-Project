@@ -30,7 +30,7 @@ import android.view.View;
 import java.util.jar.Attributes;
 
 /**
- * Created by prussian on 4/18/15.
+ * A view where the battle event occurs
  */
 public class BattleView extends View
 {

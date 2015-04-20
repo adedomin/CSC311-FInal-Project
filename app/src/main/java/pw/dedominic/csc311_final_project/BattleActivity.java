@@ -26,6 +26,9 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
+/**
+ * Activity that manages the battle sequence and bluetooth connection
+ */
 public class BattleActivity extends Activity
 {
 	private String MAC_ADDR;

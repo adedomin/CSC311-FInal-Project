@@ -160,6 +160,15 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		startActivity(intent);
 	}
 
+	/** If user is challenged, this triggers the battle sequence */
+	public void connectionStarted()
+	{
+		Intent intent = new Intent(this, BattleActivity.class);
+		intent.putExtra(Constants.INTENT_MAC_ADDRESS, mBluetoothService.getConnectedAddress());
+		mBluetoothService.killAll();
+		startActivity(intent);
+	}
+
 	/**
 	 * When Login activity finishes, this method is called
 	 *
@@ -202,13 +211,6 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		mBluetoothService.listen();
 	}
 
-	public void connectionStarted()
-	{
-		Intent intent = new Intent(this, BattleActivity.class);
-		intent.putExtra(Constants.INTENT_MAC_ADDRESS, mBluetoothService.getConnectedAddress());
-
-		startActivity(intent);
-	}
 
 	/**
 	 * Haversine formula to get distances of two points.
@@ -442,6 +444,10 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		}
 	}
 
+	/**
+	 * This handler waits to be connected.
+	 * If connection is successful, the program goes into battle state.
+	 */
 	private class BluetoothListener extends Handler
 	{
 		@Override
