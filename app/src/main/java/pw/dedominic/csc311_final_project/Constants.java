@@ -28,6 +28,8 @@ public interface Constants
 
 	public final int MESSAGE_NEW_CSV = 0;
 	public final int MESSAGE_NEW_MESSAGE = 1;
+	public final int MESSAGE_USER_NAME = 2;
+	public final int MESSAGE_NODE_LIST = 3;
 
 	/** time in seconds to query for list of users */
 	public final long HTTP_GET_CSV_DELAY = 15; // seconds
@@ -42,6 +44,12 @@ public interface Constants
 	public final String SERVER_GET_PLAYER_MESSAGE = "/csc-311/php/get_messages.php";
 	/** server/http related values */
 	public final String SERVER_UPLOAD_PLAYER_LOCATION = "/csc-311/php/update_location.php";
+	/** server/http related values */
+	public final String SERVER_GET_USER_NAME = "/csc-311/php/get_username.php";
+	/** server/http related values */
+	public final String SERVER_GET_NODE_LIST = "/csc-311/php/get_nodes.php";
+	/** server/http related values */
+	public final String SERVER_CAPTURE_NODE = "/csc-311/php/node_capture.php";
 
 	/** MapView Layout constants */
 	public final int VIEW_BALL_RADIUS = 10;
@@ -50,7 +58,7 @@ public interface Constants
 	/** login activity return types */
 	public final String INTENT_USER_NAME_KEY = "USERNAME";
 	/** login activity return types */
-	public final String INTENT_PASSWORD_KEY = "PASSWORD";
+	public final String INTENT_TEAM_KEY = "TEAM";
 	/** battle activity extra type */
 	public final String INTENT_MAC_ADDRESS = "MAC";
 	/** describes if client should connect or listen */

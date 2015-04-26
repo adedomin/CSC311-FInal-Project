@@ -69,8 +69,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 	private String PROVIDER;
 
 	private String USER_NAME;
-	private String PASSWORD = "";
-	private String TEAM_NAME = "";
+	private String TEAM_NAME;
 	private String MAC_ADDR;
 
 	private BluetoothAdapter mBluetoothAdapter;
@@ -81,6 +80,14 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 
 	// locationListener
 	LocationListener mLocationListener;
+
+	// Determines if game is ready to run
+	private boolean IS_READY = false;
+
+	// current node player is in
+	private int CURRENT_NODE;
+	private String CURRENT_NODE_OWNERSHIP;
+	private int COUNTDOWN_TIME = -99;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -132,8 +139,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 			PROVIDER = LocationManager.GPS_PROVIDER;
 		}
 
-		Intent intent = new Intent(this, LoginActivity.class);
-		startActivityForResult(intent, 0);
+		mHttpService.recreateGetUserNameTask();
+		mHttpService.getUserName(MAC_ADDR);
 	}
 
 	/**
@@ -181,6 +188,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		if (result_code == Activity.RESULT_OK)
 		{
 			USER_NAME = data.getStringExtra(Constants.INTENT_USER_NAME_KEY);
+			TEAM_NAME = data.getStringExtra(Constants.INTENT_TEAM_KEY);
 			initializeViews();
 		}
 	}
@@ -211,7 +219,6 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		mBluetoothService.listen();
 	}
 
-
 	/**
 	 * Haversine formula to get distances of two points.
 	 * Points are given in Latitude and Longitude.
@@ -237,6 +244,21 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		double b = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
 		return ((double)Constants.APPROX_RAD_EARTH) * b;
+	}
+
+	private void processLogin(String username)
+	{
+		if (username.isEmpty())
+		{
+			Intent intent = new Intent(this, LoginActivity.class);
+			startActivityForResult(intent, 0);
+			return;
+		}
+
+		String[] split_username_team = username.split(",");
+		USER_NAME = split_username_team[0];
+		TEAM_NAME = split_username_team[1];
+		initializeViews();
 	}
 
 	/**
@@ -274,10 +296,58 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		for (CSVData entry : Strings)
 		{
 			PLAYER_LIST.add(entry.username+"\n"+Double.toString(entry.distance)+"\n"+entry
-					.MAC_ADDR);
-			mMapView.addGeoPoint(entry.latitude, entry.longitude, 0xFF0000FF);
+					.MAC_ADDR
+			);
+			mMapView.addGeoPoint(entry.latitude, entry.longitude, 0xFF0000FF, true);
 		}
 		mMapView.update_map();
+	}
+
+	private void processNodeList(String nodes)
+	{
+		// strings indexed by line
+		String[] CSV = nodes.split("\n");
+
+		for (String string : CSV)
+		{
+			CSVData entry = new CSVData();
+			String[] values = string.split(",");
+			entry.nodeID = Integer.parseInt(values[0]);
+			entry.teamname = values[3];
+			entry.latitude = Double.parseDouble(values[1]);
+			entry.longitude = Double.parseDouble(values[2]);
+			entry.distance = getDistance(
+				entry.latitude, PLAYER_LATITUDE,
+				entry.longitude, PLAYER_LONGITUDE
+			);
+
+			int color;
+			if (entry.teamname.equals("NOT_OWNED"))
+			{
+				color = 0xAA000000;
+			}
+			else if (entry.teamname.equals(TEAM_NAME))
+			{
+				color = 0xAA00FF00;
+			}
+			else
+			{
+				color = 0xAAFF0000;
+			}
+
+			mMapView.addGeoPoint(entry.latitude, entry.longitude, color, false);
+
+			if (entry.distance <= 250)
+			{
+				CURRENT_NODE = entry.nodeID;
+				CURRENT_NODE_OWNERSHIP = entry.teamname;
+				// mInNodeTimer.handleMessage(obtainMessage(0))
+			}
+			else if (entry.nodeID == CURRENT_NODE)
+			{
+				CURRENT_NODE = -999;
+			}
+		}
 	}
 
 	/**
@@ -305,9 +375,15 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 	 */
 	private class CSVData implements Comparable<CSVData>
 	{
+		// user related
 		public String username;
-		public double distance;
 		public String MAC_ADDR;
+
+		// node related
+		public int nodeID;
+
+		public double distance;
+		public String teamname;
 
 		// GeoLocation, for MapView
 		public double latitude;
@@ -392,6 +468,22 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 					}
 					else
 					{
+						mTextView.setText("No Messages\n");
+					}
+					break;
+				case Constants.MESSAGE_USER_NAME:
+					IS_READY = true;
+					processLogin(string);
+					break;
+				case Constants.MESSAGE_NODE_LIST:
+					if (!string.isEmpty())
+					{
+						processNodeList(string);
+					}
+					else
+					{
+						Toast.makeText(getApplicationContext(), "No nodes, game not started",
+								Toast.LENGTH_LONG).show();
 					}
 					break;
 			}
@@ -427,6 +519,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 			mHttpService.getCSV(USER_NAME);
 			mHttpService.recreateMessageTask();
 			mHttpService.getMessages(USER_NAME, TEAM_NAME);
+			mHttpService.recreateNodeListTask();
+			mHttpService.getNodeList();
 
 			sleep(1000 * Constants.HTTP_GET_CSV_DELAY);
 		}
@@ -438,7 +532,6 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		 */
 		public void sleep(long milliseconds)
 		{
-			Log.e("delaying send msg", "");
 			removeMessages(0);
 			sendMessageDelayed(obtainMessage(0), milliseconds);
 		}
@@ -459,9 +552,71 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 					connectionStarted();
 					break;
 				case Constants.DISCONNECTED:
-					Toast.makeText(getApplicationContext(), "Failed to Connect", Toast.LENGTH_LONG);
+					Toast.makeText(getApplicationContext(), "Failed to Connect", Toast.LENGTH_LONG).show();
 					break;
 			}
+		}
+	}
+
+	private class InNodeTimer extends Handler
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			if (CURRENT_NODE == -999)
+			{
+				if (COUNTDOWN_TIME != -99)
+				{
+					COUNTDOWN_TIME = -99;
+				}
+				sleep(1000);
+				return;
+			}
+
+			if (CURRENT_NODE_OWNERSHIP.equals("NOT_OWNED"))
+			{
+				if (COUNTDOWN_TIME == -99)
+				{
+					COUNTDOWN_TIME = 30;
+				}
+				Toast.makeText(getApplicationContext(),
+						"Capturing Node in "+Integer.toString(COUNTDOWN_TIME)+" seconds...",
+						Toast.LENGTH_SHORT)
+				.show();
+				COUNTDOWN_TIME--;
+
+				if (COUNTDOWN_TIME == 0)
+				{
+					COUNTDOWN_TIME = -99;
+					Toast.makeText(getApplicationContext(),
+							"Node Captured",
+							Toast.LENGTH_SHORT)
+					.show();
+					CURRENT_NODE_OWNERSHIP = TEAM_NAME;
+					mHttpService.recreateNodeCaptureTask();
+					mHttpService.captureNode(CURRENT_NODE, TEAM_NAME);
+				}
+			}
+			else if (CURRENT_NODE_OWNERSHIP.equals(TEAM_NAME))
+			{
+				if (COUNTDOWN_TIME == -99)
+				{
+					COUNTDOWN_TIME = 0;
+				}
+				Toast.makeText(getApplicationContext(),
+						"Time in Node: "+Integer.toString(COUNTDOWN_TIME)+" seconds",
+						Toast.LENGTH_SHORT)
+				.show();
+				COUNTDOWN_TIME++;
+			}
+
+			sleep(1000);
+		}
+
+		public void sleep(long milliseconds)
+		{
+			removeMessages(0);
+			sendMessageDelayed(obtainMessage(0), milliseconds);
 		}
 	}
 }

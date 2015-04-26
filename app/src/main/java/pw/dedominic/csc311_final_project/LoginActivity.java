@@ -54,7 +54,7 @@ public class LoginActivity extends Activity
 				Intent intent = new Intent();
 
 				intent.putExtra(Constants.INTENT_USER_NAME_KEY, mEditText.getText().toString());
-				intent.putExtra(Constants.INTENT_PASSWORD_KEY, mEditText2.getText().toString());
+				intent.putExtra(Constants.INTENT_TEAM_KEY, mEditText2.getText().toString());
 
 				setResult(Activity.RESULT_OK, intent);
 				finish();

@@ -48,6 +48,9 @@ public class MapView extends View
 	// array of all map points
 	private Vector<PlayerPoint> POINTS = new Vector<>();
 
+	// array of all node points
+	private Vector<PlayerPoint> NODES = new Vector<>();
+
 	// checks if map ready to render points
 	private boolean IS_READY = false;
 
@@ -132,12 +135,17 @@ public class MapView extends View
 			return;
 		}
 
-		PLAYERS_POINT.draw(canvas);
-		MESSAGE_POINT.draw(canvas);
+		PLAYERS_POINT.draw(canvas, Constants.VIEW_BALL_RADIUS);
+		MESSAGE_POINT.draw(canvas, Constants.VIEW_BALL_RADIUS);
+
+		for (PlayerPoint point : NODES)
+		{
+			point.draw(canvas, 100);
+		}
 
 		for (PlayerPoint point : POINTS)
 		{
-			point.draw(canvas);
+			point.draw(canvas, Constants.VIEW_BALL_RADIUS);
 		}
 	}
 
@@ -152,6 +160,7 @@ public class MapView extends View
 	public void clear_map()
 	{
 		POINTS.clear();
+		NODES.clear();
 	}
 
 	/**
@@ -161,11 +170,17 @@ public class MapView extends View
 	 * @param y y coord
 	 * @param c color as a hexadecimal ARGB number
 	 */
-	public void addPoint(float x, float y, int c)
+	public void addPoint(float x, float y, int c, boolean t)
 	{
-		POINTS.add(new PlayerPoint(x, y, c));
+		if (t)
+		{
+			POINTS.add(new PlayerPoint(x, y, c));
+		}
+		else
+		{
+			NODES.add(new PlayerPoint(x, y, c));
+		}
 	}
-
 	/**
 	 * Add Point using Latitude and Longitude.
 	 * Calls decimalDegreesToPixel then addPoint.
@@ -174,11 +189,11 @@ public class MapView extends View
 	 * @param lon longitude in decimal degrees
 	 * @param c color as a hexadecimal ARGB number
 	 */
-	public boolean addGeoPoint(double lat, double lon, int c)
+	public boolean addGeoPoint(double lat, double lon, int c, boolean type)
 	{
 		// index 0 = x, index y = 1
 		double[] xy = decimalDegreesToPixels(lat, lon);
-		addPoint((float)xy[0], (float)xy[1], c);
+		addPoint((float)xy[0], (float)xy[1], c, type);
 
 		return true;
 	}
@@ -242,9 +257,9 @@ public class MapView extends View
 			y = _y;
 		}
 
-		public void draw(Canvas canvas)
+		public void draw(Canvas canvas, int radius)
 		{
-			canvas.drawCircle(x, y, Constants.VIEW_BALL_RADIUS, color);
+			canvas.drawCircle(x, y, radius, color);
 		}
 	}
 }
