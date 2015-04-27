@@ -168,9 +168,6 @@ public class HttpService
 		}
 	}
 
-
-
-
 	/**
 	 * AsyncTasks can only be called once, so to call it again, it must be recreated
 	 */
@@ -208,7 +205,6 @@ public class HttpService
 	{
 		protected Void doInBackground(URL... params)
 		{
-			Log.e("Getting Messages", "");
 			HttpURLConnection connection;
 			String data_string;
 			BufferedReader reader;
@@ -223,7 +219,6 @@ public class HttpService
 					data_string += "\n";
 					builder.append(data_string);
 				}
-				Log.e("Message:", builder.toString());
 				mHandler.obtainMessage(Constants.MESSAGE_NEW_CSV, builder.toString()).sendToTarget();
 			}
 			catch (IOException e)
@@ -349,7 +344,7 @@ public class HttpService
 			url = new URL(Constants.SERVER_DOMAIN_NAME +
 						  Constants.SERVER_CAPTURE_NODE +
 						   "?team="+teamname +
-						   "?node="+Integer.toString(nodeID));
+						   "&node="+Integer.toString(nodeID));
 		}
 		catch (MalformedURLException e)
 		{

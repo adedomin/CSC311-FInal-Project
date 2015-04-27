@@ -277,12 +277,13 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 			CSVData entry = new CSVData();
 			String[] split_string = string.split(",");
 			entry.username = split_string[0];
-			entry.latitude = Double.parseDouble(split_string[1]);
-			entry.longitude = Double.parseDouble(split_string[2]);
+			entry.teamname = split_string[1];
+			entry.latitude = Double.parseDouble(split_string[2]);
+			entry.longitude = Double.parseDouble(split_string[3]);
 			entry.distance = getDistance(
 					entry.latitude, PLAYER_LATITUDE,
 					entry.longitude, PLAYER_LONGITUDE);
-			entry.MAC_ADDR = split_string[3];
+			entry.MAC_ADDR = split_string[4];
 
 			Strings.add(entry);
 		}
@@ -298,7 +299,18 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 			PLAYER_LIST.add(entry.username+"\n"+Double.toString(entry.distance)+"\n"+entry
 					.MAC_ADDR
 			);
-			mMapView.addGeoPoint(entry.latitude, entry.longitude, 0xFF0000FF, true);
+
+			int color;
+			if (entry.teamname.equals(TEAM_NAME))
+			{
+				color = 0xAA00FF00;
+			}
+			else
+			{
+				color = 0xAAFF0000;
+			}
+
+			mMapView.addGeoPoint(entry.latitude, entry.longitude, color, true);
 		}
 		mMapView.update_map();
 	}
@@ -348,6 +360,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 				CURRENT_NODE = -999;
 			}
 		}
+
+		mMapView.update_map();
 	}
 
 	/**

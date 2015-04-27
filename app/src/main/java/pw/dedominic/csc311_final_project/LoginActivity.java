@@ -19,10 +19,16 @@ package pw.dedominic.csc311_final_project;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Activity that gets user's username and password.
@@ -51,15 +57,49 @@ public class LoginActivity extends Activity
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
 			{
-				Intent intent = new Intent();
-
-				intent.putExtra(Constants.INTENT_USER_NAME_KEY, mEditText.getText().toString());
-				intent.putExtra(Constants.INTENT_TEAM_KEY, mEditText2.getText().toString());
-
-				setResult(Activity.RESULT_OK, intent);
-				finish();
+				CreateUserTask create_user = new CreateUserTask();
+				create_user.execute();
 				return false;
 			}
 		});
+	}
+
+	private void returnToMainActivity()
+	{
+		Intent intent = new Intent();
+
+		intent.putExtra(Constants.INTENT_USER_NAME_KEY, mEditText.getText().toString());
+		intent.putExtra(Constants.INTENT_TEAM_KEY, mEditText2.getText().toString());
+
+		setResult(Activity.RESULT_OK, intent);
+		finish();
+	}
+
+	private class CreateUserTask extends AsyncTask<Void, Void, Void>
+	{
+		@Override
+		protected Void doInBackground(Void... params)
+		{
+			URL url;
+			HttpURLConnection connection;
+			try
+			{
+				url = new URL(Constants.SERVER_DOMAIN_NAME +
+							  Constants.SERVER_CREATE_USER +
+							  "?user="+mEditText.getText().toString() +
+							  "&team="+mEditText2.getText().toString());
+				connection = (HttpURLConnection) url.openConnection();
+				connection.getInputStream();
+			}
+			catch (MalformedURLException e)
+			{
+			}
+			catch (IOException e)
+			{
+			}
+
+			returnToMainActivity();
+			return null;
+		}
 	}
 }

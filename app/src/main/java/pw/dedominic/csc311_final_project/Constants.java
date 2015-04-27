@@ -50,6 +50,8 @@ public interface Constants
 	public final String SERVER_GET_NODE_LIST = "/csc-311/php/get_nodes.php";
 	/** server/http related values */
 	public final String SERVER_CAPTURE_NODE = "/csc-311/php/node_capture.php";
+	/** server/http related values */
+	public final String SERVER_CREATE_USER = "/csc-311/php/create_user.php";
 
 	/** MapView Layout constants */
 	public final int VIEW_BALL_RADIUS = 10;
