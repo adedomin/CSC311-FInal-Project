@@ -112,7 +112,7 @@ public class HttpService
 			}
 			catch (IOException e)
 			{
-				return null;
+				Log.e("Failed to get Username", e.getMessage());
 			}
 
 			return null;
@@ -278,6 +278,7 @@ public class HttpService
 			}
 			catch (IOException e)
 			{
+				Log.e("Failed to get messages", e.getMessage());
 			}
 
 			return null;
@@ -325,6 +326,7 @@ public class HttpService
 			}
 			catch (IOException e)
 			{
+				Log.e("Failed to upload loc", e.getMessage());
 			}
 
 			return null;
@@ -366,6 +368,7 @@ public class HttpService
 			}
 			catch (IOException e)
 			{
+				Log.e("Failed to capture node", e.getMessage());
 			}
 			return null;
 		}

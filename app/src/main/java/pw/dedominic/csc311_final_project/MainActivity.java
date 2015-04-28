@@ -60,6 +60,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 	private HttpGetHandler mHttpGetHandler = new HttpGetHandler();
 	private UploadLocation mUploadLocation = new UploadLocation();
 	private BluetoothListener mBluetoothListener = new BluetoothListener();
+	private InNodeTimer mInNodeTimer = new InNodeTimer();
 
 	private HttpService mHttpService = new HttpService(mHttpHandler);
 
@@ -85,8 +86,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 	private boolean IS_READY = false;
 
 	// current node player is in
-	private int CURRENT_NODE;
-	private String CURRENT_NODE_OWNERSHIP;
+	private int CURRENT_NODE = -999;
+	private String CURRENT_NODE_OWNERSHIP = "NOT_OWNED";
 	private int COUNTDOWN_TIME = -99;
 
 	@Override
@@ -217,6 +218,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 
 		mBluetoothService = new BluetoothService(mBluetoothListener);
 		mBluetoothService.listen();
+
+		mInNodeTimer.handleMessage(Message.obtain());
 	}
 
 	/**
@@ -248,7 +251,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 
 	private void processLogin(String username)
 	{
-		if (username.isEmpty())
+		if (username.equals("User does not exist"))
 		{
 			Intent intent = new Intent(this, LoginActivity.class);
 			startActivityForResult(intent, 0);
@@ -353,11 +356,13 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 			{
 				CURRENT_NODE = entry.nodeID;
 				CURRENT_NODE_OWNERSHIP = entry.teamname;
-				// mInNodeTimer.handleMessage(obtainMessage(0))
 			}
 			else if (entry.nodeID == CURRENT_NODE)
 			{
 				CURRENT_NODE = -999;
+				Toast.makeText(getApplicationContext(),
+						"Exiting Node...",
+						Toast.LENGTH_LONG).show();
 			}
 		}
 
@@ -496,7 +501,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 					}
 					else
 					{
-						Toast.makeText(getApplicationContext(), "No nodes, game not started",
+						Toast.makeText(getApplicationContext(),
+								"No nodes, game not started",
 								Toast.LENGTH_LONG).show();
 					}
 					break;
@@ -592,11 +598,10 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 				if (COUNTDOWN_TIME == -99)
 				{
 					COUNTDOWN_TIME = 30;
+					Toast.makeText(getApplicationContext(),
+							"Capturing Node in 30 seconds",
+							Toast.LENGTH_SHORT).show();
 				}
-				Toast.makeText(getApplicationContext(),
-						"Capturing Node in "+Integer.toString(COUNTDOWN_TIME)+" seconds...",
-						Toast.LENGTH_SHORT)
-				.show();
 				COUNTDOWN_TIME--;
 
 				if (COUNTDOWN_TIME == 0)
@@ -615,12 +620,11 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 			{
 				if (COUNTDOWN_TIME == -99)
 				{
+					Toast.makeText(getApplicationContext(),
+							"In Friendly Node",
+							Toast.LENGTH_SHORT).show();
 					COUNTDOWN_TIME = 0;
 				}
-				Toast.makeText(getApplicationContext(),
-						"Time in Node: "+Integer.toString(COUNTDOWN_TIME)+" seconds",
-						Toast.LENGTH_SHORT)
-				.show();
 				COUNTDOWN_TIME++;
 			}
 

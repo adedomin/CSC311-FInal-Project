@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -41,6 +42,8 @@ public class LoginActivity extends Activity
 	EditText mEditText;
 	EditText mEditText2;
 
+	boolean PREVENT_DUP = false;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -58,7 +61,11 @@ public class LoginActivity extends Activity
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
 			{
 				CreateUserTask create_user = new CreateUserTask();
-				create_user.execute();
+				if (!PREVENT_DUP)
+				{
+					create_user.execute();
+					PREVENT_DUP = !PREVENT_DUP;
+				}
 				return false;
 			}
 		});
